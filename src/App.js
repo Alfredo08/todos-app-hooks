@@ -30,17 +30,13 @@ function App() {
   }
 
   const actualizarTodo = ( idTodo, statusNuevo ) => {
-    console.log( "Entrando " );
-    let todosActualizados = todos; 
-    console.log( todosActualizados );
+    let todosActualizados = [...todos];
     for( let i = 0; i < todosActualizados.length; i ++ ){
       if( todosActualizados[i].id === idTodo ){
         todosActualizados[i].status = statusNuevo;
       }
     }
-    console.log( "Antes del set" );
     setTodos( (todosPrev) => todosActualizados );
-    console.log( "Despues del set" );
   }
 
   const agregarNuevoTodo = (event) => {
@@ -97,7 +93,7 @@ function App() {
           {
             todos.map( (todo, indice) => {
               return ( 
-                <Todo todo={todo} actualizarTodo={() => actualizarTodo()} key={'todo_' + indice}>
+                <Todo todo={todo} actualizarTodo={actualizarTodo} key={'todo_' + indice}>
                   <p> Elemento enviado desde el componente padre. </p>
                 </Todo>
               );

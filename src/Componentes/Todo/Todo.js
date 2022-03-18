@@ -1,7 +1,7 @@
 import './Todo.css';
 
 function Todo( props ){
-    //console.log( props );
+    console.log( props );
     return(
         <div className='tarjeta_todo'>
             <h3 className='titulo_todo'>
