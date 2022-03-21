@@ -12,15 +12,25 @@ function Todo( props ){
             </p>
             
             <div>
-                <button onClick={() => props.actualizarTodo( props.todo.id, 'Completo' )}>
-                    Completar
-                </button>
-                <button onClick={() => props.actualizarTodo( props.todo.id, 'En progreso' )}>
-                    En progreso
-                </button>
-                <button onClick={() => props.actualizarTodo( props.todo.id, 'Cancelado' )}>
-                    Cancelar
-                </button>
+                {
+                (props.todo.status !== 'Completo') ? 
+                    (<button onClick={() => props.actualizarTodo( props.todo.id, 'Completo' )}>
+                        Completar
+                    </button>) : "" 
+                }
+                {
+                (props.todo.status !== 'En progreso') ? 
+                    (<button onClick={() => props.actualizarTodo( props.todo.id, 'En progreso' )}>
+                        En progreso
+                    </button>) : ""
+                }
+                {
+                    (props.todo.status !== 'Cancelado') ?
+                    (<button onClick={() => props.actualizarTodo( props.todo.id, 'Cancelado' )}>
+                        Cancelar
+                    </button>) : ""
+                }
+                
             </div>
         
             {props.children}
