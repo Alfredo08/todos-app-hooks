@@ -1,4 +1,5 @@
 import './Todo.css';
+import {Link} from 'react-router-dom';
 
 function Todo( props ){
     console.log( props );
@@ -32,8 +33,8 @@ function Todo( props ){
                 }
                 
             </div>
-        
-            {props.children}
+            <Link to={'/todo/' + props.todo.id}> Ver detalle </Link>
+            
         </div>
     );
 }

@@ -41,3 +41,13 @@
   display: flex;
   flex-direction: row;
 }
+
+.navegacion{
+  display: flex;
+  flex-direction: row;
+  list-style: none;
+}
+
+.opcion{
+  margin: 10px;
+}

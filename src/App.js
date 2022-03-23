@@ -1,6 +1,9 @@
 import {useState} from 'react';
 import './App.css';
-import Todo from './Componentes/Todo/Todo';
+import ListaTodos from './Componentes/ListaTodos/ListaTodos';
+import FormularioTodo from './Componentes/FormularioTodo/FormularioTodo';
+import {BrowserRouter, Link, Route, Switch} from 'react-router-dom';
+import DetalleTodo from './Componentes/DetalleTodo/DetalleTodo';
 
 function App() {
   const todosIniciales = [{
@@ -36,12 +39,6 @@ function App() {
     setTodos( (todosPrev) => todosActualizados );
   }
 
-  const cambiarDatos = () => {
-    setNombre( (nombrePrev) => "Alex" );
-    setApellido( (apellidoPrev) => "Garcia" );
-    setEdad( (edadPrevia) => edadPrevia + 1 );
-  }
-
   const agregarNuevoTodo = (event) => {
     event.preventDefault();
 
@@ -56,86 +53,40 @@ function App() {
     });
   }
 
-  const mensajeAlex = () => {
-    return(
-      <p>
-        Alex ya no tiene 25 años
-      </p>
-    )
-  }
+  return (
+    <BrowserRouter>
+        <h2>
+          Bienvenido de vuelta {nombre} {apellido}. Edad {edad}
+        </h2>
+        <ul className="navegacion">
+          <li className="opcion">
+            <Link to="/"> Dashboard </Link>
+          </li>
+          <li className="opcion">
+            <Link to="/todo/nuevo"> Agregar Todo </Link>
+          </li>
+          <li className="opcion">
+            <Link to="/todos"> Lista de todos </Link>
+          </li>
+        </ul>
 
-  let numeros = [];
+        <Switch>
+          <Route path="/todo/nuevo" 
+               render={ (routeProps) => <FormularioTodo agregarNuevoTodo={agregarNuevoTodo}
+                                              nuevoTodo={nuevoTodo}
+                                              actualizaCampoNuevoTodo={actualizaCampoNuevoTodo}
+                                              {...routeProps}/>} />
+          <Route path="/todos" render={ (routeProps) => <ListaTodos todos={todos} 
+                                                          actualizarTodo={actualizarTodo}
+                                                          {...routeProps}/>} />
+          <Route path="/todo/:identificador" render={ (routeProps) => <DetalleTodo {...routeProps} todos={todos} />} />
+        </Switch>
+        
+        
+    </BrowserRouter>
+  );
 
-  for( let i = 0; i <= 10; i ++ ){
-    numeros.push( <p key={"numero_" + i}> {i} </p> )
-  }
-
-  if( edad === 25 ){
-    return (
-      <div>
-          <h2>
-            Bienvenido de vuelta {nombre} {apellido}. Edad {edad}
-          </h2>
-          <form onSubmit={agregarNuevoTodo}>
-            <div>
-              <label htmlFor="nombreTodo">
-                Nombre todo:
-              </label>
-              <input type="text" id="nombreTodo" 
-                    value={nuevoTodo.nombre} 
-                    onChange={(event) => actualizaCampoNuevoTodo('nombre', event.target.value)}/>
-            </div>
-            <div>
-              <label htmlFor="statusTodo">
-                Status todo:
-              </label>
-              <select  id="statusTodo" 
-                      onChange={(event) => actualizaCampoNuevoTodo('status', event.target.value)}>
-                <option value="Completo"> Completo </option>
-                <option value="En progreso"> En progreso </option>
-                <option value="Cancelado"> Cancelado </option>
-              </select>
-            </div>
-            <div>
-              <label htmlFor="idTodo">
-                ID todo:
-              </label>
-              <input type="number" id="idTodo"
-                    value={nuevoTodo.id} 
-                    onChange={(event) => actualizaCampoNuevoTodo('id', event.target.value)} />
-            </div>
-            <button type="submit">
-              Agregar
-            </button>
-          </form>
-          <h3>
-            Lista de pendientes
-          </h3>
-          <div className="lista_todos">
-            {
-              todos.map( (todo, indice) => { 
-                return ( 
-                  <Todo todo={todo} actualizarTodo={actualizarTodo} key={'todo_' + indice}>
-                    <p> Elemento enviado desde el componente padre. </p>
-                  </Todo>
-                );
-              })
-            }
-          </div>
-          <button onClick={() => cambiarDatos()} >
-            Cambiar nombre a Alex
-          </button>
-          {numeros}
-      </div>
-    );
-  }
-  else{
-    return(
-      <div>
-        { (edad > 25) ? mensajeAlex() : "" }
-      </div>
-    )
-  }
+  
 }
 
 export default App;
