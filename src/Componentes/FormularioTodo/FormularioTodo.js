@@ -1,7 +1,10 @@
+import Navegacion from './../Navegacion/Navegacion';
 
 function FormularioTodo( props ){
     console.log( props );
     return(
+      <div>
+        <Navegacion nombreUsuario={props.nombreUsuario}/>
         <form onSubmit={props.agregarNuevoTodo}>
             <div>
               <label htmlFor="nombreTodo">
@@ -30,10 +33,12 @@ function FormularioTodo( props ){
                     value={props.nuevoTodo.id} 
                     onChange={(event) => props.actualizaCampoNuevoTodo('id', Number(event.target.value))} />
             </div>
+           
             <button type="submit">
               Agregar
             </button>
         </form>
+      </div>
     )
 }
 

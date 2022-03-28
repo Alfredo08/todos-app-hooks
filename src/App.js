@@ -1,48 +1,56 @@
-import {useState} from 'react';
+import {useState, useEffect} from 'react';
+import axios from 'axios';
 import './App.css';
 import ListaTodos from './Componentes/ListaTodos/ListaTodos';
 import FormularioTodo from './Componentes/FormularioTodo/FormularioTodo';
-import {BrowserRouter, Link, Route, Switch} from 'react-router-dom';
+import {Route, Switch, withRouter} from 'react-router-dom';
 import DetalleTodo from './Componentes/DetalleTodo/DetalleTodo';
+import SeleccionUsuario from './Componentes/SeleccionUsuario/SeleccionUsuario';
 
-function App() {
-  const todosIniciales = [{
-    nombre : 'Aprender componentes de tipo clase.',
-    status : 'En progreso',
-    id : 123
-  },
-  {
-    nombre : 'Aprender eventos en React.',
-    status : 'En progreso',
-    id : 456
-  }];
-
+function App( props ) {
   const todoNuevoInicial = {
     nombre : '',
     status : '',
     id : 0
   };
 
-  const [nombre, setNombre] = useState( 'Alexander' );
-  const [apellido, setApellido] = useState( 'Martinez' );
-  const [edad, setEdad] = useState( 25 );
-  const [todos, setTodos] = useState( todosIniciales );
+  const [nombre, setNombre] = useState( '' );
+  const [apellido, setApellido] = useState( '' );
+  const [nombreUsuario, setNombreUsuario] = useState( '' );
+  const [usuarios, setUsuarios] = useState( [] );
+  const [todos, setTodos] = useState( [] );
   const [nuevoTodo, setNuevoTodo] = useState( todoNuevoInicial );
 
   const actualizarTodo = ( idTodo, statusNuevo ) => {
-    let todosActualizados = [...todos];
-    for( let i = 0; i < todosActualizados.length; i ++ ){
-      if( todosActualizados[i].id === idTodo ){
-        todosActualizados[i].status = statusNuevo;
-      }
-    }
-    setTodos( (todosPrev) => todosActualizados );
+    const datosActualizar = {
+      id: idTodo,
+      status : statusNuevo
+    };
+    axios.put( 'http://localhost:8080/api/todo/actualizar', datosActualizar )
+      .then( response => {
+        let todosActualizados = [...todos];
+        for( let i = 0; i < todosActualizados.length; i ++ ){
+          if( todosActualizados[i].id === idTodo ){
+            todosActualizados[i].status = statusNuevo;
+          }
+        }
+        setTodos( (todosPrev) => todosActualizados );
+      })
+    
   }
 
   const agregarNuevoTodo = (event) => {
     event.preventDefault();
+    const ajusteNuevoTodo = {
+      ...nuevoTodo,
+      nombreUsuario
+    }
 
-    setTodos( (todosPrev) => [...todosPrev, nuevoTodo] );
+    axios.post( 'http://localhost:8080/api/todo/nuevo', ajusteNuevoTodo )
+      .then( response => {
+        setTodos( (todosPrev) => [...todosPrev, response.data] );
+
+      })
     setNuevoTodo( (todoNuevoPrev) => todoNuevoInicial );
   }
 
@@ -53,40 +61,62 @@ function App() {
     });
   }
 
-  return (
-    <BrowserRouter>
-        <h2>
-          Bienvenido de vuelta {nombre} {apellido}. Edad {edad}
-        </h2>
-        <ul className="navegacion">
-          <li className="opcion">
-            <Link to="/"> Dashboard </Link>
-          </li>
-          <li className="opcion">
-            <Link to="/todo/nuevo"> Agregar Todo </Link>
-          </li>
-          <li className="opcion">
-            <Link to="/todos"> Lista de todos </Link>
-          </li>
-        </ul>
+  const seleccionarUsuario = ( event ) => {
+    event.preventDefault();
+    setNombreUsuario( (nombrePrev) => event.target.nombreUsuario.value );
+    props.history.push( '/todos' );
+  }
 
+  useEffect( () => {
+    if( nombreUsuario !== '' ){
+      axios.get( `http://localhost:8080/api/usuario/getById/${nombreUsuario}` )
+        .then( response => {
+          setTodos( (todosPrev) => response.data.todos );
+        });
+    }
+  }, [nombreUsuario]);
+
+  useEffect( () => {
+    axios.get( 'http://localhost:8080/api/usuario/getAll' )
+      .then( response => {
+        const listaUsuarios = response.data.map( (usuario, index) => {
+          return {
+            nombre : usuario.nombre,
+            apellido : usuario.apellido,
+            nombreUsuario : usuario.nombreUsuario
+          }
+        });
+        setUsuarios( (usuariosPrev) => listaUsuarios );
+        
+      });
+  }, []);
+  return (
+    <div>
         <Switch>
+          <Route exact path="/" render={ (routeProps) => <SeleccionUsuario usuarios={usuarios}
+                                                      seleccionarUsuario={seleccionarUsuario}
+                                                      {...routeProps} /> } />
           <Route path="/todo/nuevo" 
                render={ (routeProps) => <FormularioTodo agregarNuevoTodo={agregarNuevoTodo}
                                               nuevoTodo={nuevoTodo}
+                                              nombreUsuario={nombreUsuario}
                                               actualizaCampoNuevoTodo={actualizaCampoNuevoTodo}
+                                              usuarios={usuarios}
                                               {...routeProps}/>} />
           <Route path="/todos" render={ (routeProps) => <ListaTodos todos={todos} 
                                                           actualizarTodo={actualizarTodo}
+                                                          nombreUsuario={nombreUsuario}
                                                           {...routeProps}/>} />
-          <Route path="/todo/:identificador" render={ (routeProps) => <DetalleTodo {...routeProps} todos={todos} />} />
+          <Route path="/todo/:identificador" render={ (routeProps) => <DetalleTodo {...routeProps} 
+                                                  todos={todos}
+                                                  nombreUsuario={nombreUsuario} />} />
         </Switch>
         
         
-    </BrowserRouter>
+    </div>
   );
 
   
 }
 
-export default App;
+export default withRouter(App);
