@@ -34,6 +34,9 @@ function Todo( props ){
                 
             </div>
             <Link to={'/todo/' + props.todo.id}> Ver detalle </Link>
+            <button onClick={() => props.eliminarTodo(props.todo.id)}>
+                Eliminar todo
+            </button>
             
         </div>
     );

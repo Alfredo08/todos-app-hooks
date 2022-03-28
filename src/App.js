@@ -67,10 +67,21 @@ function App( props ) {
     props.history.push( '/todos' );
   }
 
+  const eliminarTodo = (id) => {
+    axios.delete( `http://localhost:8080/api/todo/eliminar/${id}`)
+      .then( response => {
+        const todosActualizados = [...todos];
+        const indice = todos.findIndex( (todo) => todo.id === Number( id ) );
+        todosActualizados.splice( indice, 1 );
+        setTodos( (todosPrev) => todosActualizados );
+      });
+  }
+
   useEffect( () => {
     if( nombreUsuario !== '' ){
       axios.get( `http://localhost:8080/api/usuario/getById/${nombreUsuario}` )
         .then( response => {
+          console.log( response );
           setTodos( (todosPrev) => response.data.todos );
         });
     }
@@ -105,10 +116,12 @@ function App( props ) {
                                               {...routeProps}/>} />
           <Route path="/todos" render={ (routeProps) => <ListaTodos todos={todos} 
                                                           actualizarTodo={actualizarTodo}
+                                                          eliminarTodo={eliminarTodo}
                                                           nombreUsuario={nombreUsuario}
                                                           {...routeProps}/>} />
           <Route path="/todo/:identificador" render={ (routeProps) => <DetalleTodo {...routeProps} 
                                                   todos={todos}
+                                                  eliminarTodo={eliminarTodo}
                                                   nombreUsuario={nombreUsuario} />} />
         </Switch>
         

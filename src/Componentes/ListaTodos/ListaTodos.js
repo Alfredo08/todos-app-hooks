@@ -13,7 +13,10 @@ function ListaTodos( props ){
             {
                 props.todos.map( (todo, indice) => { 
                     return ( 
-                    <Todo todo={todo} actualizarTodo={props.actualizarTodo} key={'todo_' + indice} />
+                    <Todo todo={todo} 
+                          actualizarTodo={props.actualizarTodo} 
+                          eliminarTodo={props.eliminarTodo}
+                          key={'todo_' + indice} />
                     );
                 })
             }
