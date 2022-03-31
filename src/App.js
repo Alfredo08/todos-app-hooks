@@ -5,7 +5,9 @@ import ListaTodos from './Componentes/ListaTodos/ListaTodos';
 import FormularioTodo from './Componentes/FormularioTodo/FormularioTodo';
 import {Route, Switch, withRouter} from 'react-router-dom';
 import DetalleTodo from './Componentes/DetalleTodo/DetalleTodo';
-import SeleccionUsuario from './Componentes/SeleccionUsuario/SeleccionUsuario';
+//import SeleccionUsuario from './Componentes/SeleccionUsuario/SeleccionUsuario';
+import RegistroUsuario from './Componentes/RegistroUsuario/RegistroUsuario';
+import Login from './Componentes/Login/Login';
 
 function App( props ) {
   const todoNuevoInicial = {
@@ -14,12 +16,11 @@ function App( props ) {
     id : 0
   };
 
-  const [nombre, setNombre] = useState( '' );
-  const [apellido, setApellido] = useState( '' );
   const [nombreUsuario, setNombreUsuario] = useState( '' );
   const [usuarios, setUsuarios] = useState( [] );
   const [todos, setTodos] = useState( [] );
   const [nuevoTodo, setNuevoTodo] = useState( todoNuevoInicial );
+  const [mensajeError, setMensajeError] = useState( '' );
 
   const actualizarTodo = ( idTodo, statusNuevo ) => {
     const datosActualizar = {
@@ -51,6 +52,9 @@ function App( props ) {
         setTodos( (todosPrev) => [...todosPrev, response.data] );
 
       })
+      .catch( err => {
+        console.log( err );
+      })
     setNuevoTodo( (todoNuevoPrev) => todoNuevoInicial );
   }
 
@@ -61,11 +65,13 @@ function App( props ) {
     });
   }
 
+  /*
   const seleccionarUsuario = ( event ) => {
     event.preventDefault();
     setNombreUsuario( (nombrePrev) => event.target.nombreUsuario.value );
     props.history.push( '/todos' );
   }
+  */
 
   const eliminarTodo = (id) => {
     axios.delete( `http://localhost:8080/api/todo/eliminar/${id}`)
@@ -74,6 +80,59 @@ function App( props ) {
         const indice = todos.findIndex( (todo) => todo.id === Number( id ) );
         todosActualizados.splice( indice, 1 );
         setTodos( (todosPrev) => todosActualizados );
+      });
+  }
+
+  const registrarUsuario = ( event ) => {
+    event.preventDefault();
+    const nuevoUsuario = {
+      nombre : event.target.nombre.value,
+      apellido : event.target.apellido.value,
+      nombreUsuario : event.target.nombreUsuario.value,
+      password : event.target.password.value
+    };
+
+    axios.post( `http://localhost:8080/api/usuario/registrar`, nuevoUsuario )
+      .then( response => {
+        localStorage.setItem( 'token', response.data.token );
+        setMensajeError( '' );
+        props.history.push( '/todos' );
+      })
+      .catch( err => {
+        setMensajeError( err.response.statusText );
+      });
+  }
+
+  const loginUsuario = ( event ) => {
+    event.preventDefault();
+
+    const usuario = {
+      nombreUsuario : event.target.nombreUsuario.value,
+      password : event.target.password.value
+    }
+
+    axios.post( 'http://localhost:8080/api/usuario/login', usuario )
+      .then( response => {
+        console.log( response.data );
+        localStorage.setItem( 'token', response.data.token );
+        setMensajeError( '' );
+        props.history.push( '/todos' );
+      })
+      .catch( err => {
+        setMensajeError( err.response.statusText );
+      });
+  }
+
+  const validarToken = () => {
+    const token = localStorage.getItem( 'token' );
+    const config = {
+      headers : {
+        'api-token' : token
+      }
+    }
+    axios.post( 'http://localhost:8080/api/usuario/validarToken', {}, config )
+      .then( response => {
+        setNombreUsuario( response.data.nombreUsuario );
       });
   }
 
@@ -104,9 +163,15 @@ function App( props ) {
   return (
     <div>
         <Switch>
-          <Route exact path="/" render={ (routeProps) => <SeleccionUsuario usuarios={usuarios}
-                                                      seleccionarUsuario={seleccionarUsuario}
+          <Route exact path="/" render={ (routeProps) => <Login 
+                                                      loginUsuario = {loginUsuario}
                                                       {...routeProps} /> } />
+          <Route exact path="/login" render={ (routeProps) => <Login 
+                                                      loginUsuario = {loginUsuario}
+                                                      {...routeProps} /> } />
+          <Route path="/registro" render={ (routeProps) => <RegistroUsuario 
+                                              registrarUsuario = {registrarUsuario}
+                                              {...routeProps}/> } />
           <Route path="/todo/nuevo" 
                render={ (routeProps) => <FormularioTodo agregarNuevoTodo={agregarNuevoTodo}
                                               nuevoTodo={nuevoTodo}
@@ -114,17 +179,35 @@ function App( props ) {
                                               actualizaCampoNuevoTodo={actualizaCampoNuevoTodo}
                                               usuarios={usuarios}
                                               {...routeProps}/>} />
-          <Route path="/todos" render={ (routeProps) => <ListaTodos todos={todos} 
-                                                          actualizarTodo={actualizarTodo}
-                                                          eliminarTodo={eliminarTodo}
-                                                          nombreUsuario={nombreUsuario}
-                                                          {...routeProps}/>} />
+          <Route path="/todos" render={ (routeProps) => {
+            validarToken();
+
+            if( nombreUsuario !== '' ){
+              return( 
+                <ListaTodos todos={todos} 
+                            validarToken={validarToken}
+                            actualizarTodo={actualizarTodo}
+                            eliminarTodo={eliminarTodo}
+                            nombreUsuario={nombreUsuario}
+                            {...routeProps}/>
+              );
+            }
+            else{
+              return(
+                <div>
+                  Necesitas hacer login para ver el contenido de esta pagina
+                </div>
+              );
+            }
+          }} />
           <Route path="/todo/:identificador" render={ (routeProps) => <DetalleTodo {...routeProps} 
                                                   todos={todos}
                                                   eliminarTodo={eliminarTodo}
                                                   nombreUsuario={nombreUsuario} />} />
         </Switch>
-        
+        <div>
+          {mensajeError}
+        </div>
         
     </div>
   );
