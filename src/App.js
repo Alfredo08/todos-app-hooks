@@ -3,7 +3,7 @@ import axios from 'axios';
 import './App.css';
 import ListaTodos from './Componentes/ListaTodos/ListaTodos';
 import FormularioTodo from './Componentes/FormularioTodo/FormularioTodo';
-import {Route, Switch, withRouter} from 'react-router-dom';
+import {Route, Switch, withRouter, Link} from 'react-router-dom';
 import DetalleTodo from './Componentes/DetalleTodo/DetalleTodo';
 //import SeleccionUsuario from './Componentes/SeleccionUsuario/SeleccionUsuario';
 import RegistroUsuario from './Componentes/RegistroUsuario/RegistroUsuario';
@@ -27,7 +27,13 @@ function App( props ) {
       id: idTodo,
       status : statusNuevo
     };
-    axios.put( 'http://localhost:8080/api/todo/actualizar', datosActualizar )
+    const config = {
+      headers : {
+        'api-token' : localStorage.getItem( 'token' )
+      }
+    };
+
+    axios.put( 'http://localhost:8080/api/todo/actualizar', datosActualizar, config )
       .then( response => {
         let todosActualizados = [...todos];
         for( let i = 0; i < todosActualizados.length; i ++ ){
@@ -37,6 +43,10 @@ function App( props ) {
         }
         setTodos( (todosPrev) => todosActualizados );
       })
+      .catch( err => {
+        console.log( err.response.statusText );
+        props.history.push( '/login' );
+      });
     
   }
 
@@ -46,14 +56,20 @@ function App( props ) {
       ...nuevoTodo,
       nombreUsuario
     }
-
-    axios.post( 'http://localhost:8080/api/todo/nuevo', ajusteNuevoTodo )
+    const config = {
+      headers : {
+        'api-token' : localStorage.getItem( 'token' )
+      }
+    };
+    axios.post( 'http://localhost:8080/api/todo/nuevo', ajusteNuevoTodo, config )
       .then( response => {
         setTodos( (todosPrev) => [...todosPrev, response.data] );
 
       })
       .catch( err => {
-        console.log( err );
+        // Validar el error
+        console.log( err.response.statusText );
+        props.history.push( '/login' );
       })
     setNuevoTodo( (todoNuevoPrev) => todoNuevoInicial );
   }
@@ -74,12 +90,21 @@ function App( props ) {
   */
 
   const eliminarTodo = (id) => {
-    axios.delete( `http://localhost:8080/api/todo/eliminar/${id}`)
+    const config = {
+      headers : {
+        'api-token' : localStorage.getItem( 'token' )
+      }
+    };
+    axios.delete( `http://localhost:8080/api/todo/eliminar/${id}`, {}, config )
       .then( response => {
         const todosActualizados = [...todos];
         const indice = todos.findIndex( (todo) => todo.id === Number( id ) );
         todosActualizados.splice( indice, 1 );
         setTodos( (todosPrev) => todosActualizados );
+      })
+      .catch( err =>{
+        console.log( err.response.statusText );
+        props.history.push( '/login' );
       });
   }
 
@@ -138,16 +163,33 @@ function App( props ) {
 
   useEffect( () => {
     if( nombreUsuario !== '' ){
-      axios.get( `http://localhost:8080/api/usuario/getById/${nombreUsuario}` )
+      const config = {
+        headers : {
+          'api-token' : localStorage.getItem( 'token' )
+        }
+      }
+      axios.get( `http://localhost:8080/api/usuario/getById/${nombreUsuario}`, config )
         .then( response => {
           console.log( response );
           setTodos( (todosPrev) => response.data.todos );
+        })
+        .catch( err =>{
+          console.log( err.response.statusText );
+          props.history.push( '/login' );
         });
+    }
+    else{
+      props.history.push( '/login' );
     }
   }, [nombreUsuario]);
 
   useEffect( () => {
-    axios.get( 'http://localhost:8080/api/usuario/getAll' )
+    const config = {
+      headers : {
+        'api-token' : localStorage.getItem( 'token' )
+      }
+    }
+    axios.get( 'http://localhost:8080/api/usuario/getAll', config )
       .then( response => {
         const listaUsuarios = response.data.map( (usuario, index) => {
           return {
@@ -155,6 +197,10 @@ function App( props ) {
             apellido : usuario.apellido,
             nombreUsuario : usuario.nombreUsuario
           }
+        })
+        .catch( err =>{
+          console.log( err.response.statusText );
+          props.history.push( '/login' );
         });
         setUsuarios( (usuariosPrev) => listaUsuarios );
         
@@ -196,6 +242,7 @@ function App( props ) {
               return(
                 <div>
                   Necesitas hacer login para ver el contenido de esta pagina
+                  <Link to="/login"> Ir a login</Link>
                 </div>
               );
             }
